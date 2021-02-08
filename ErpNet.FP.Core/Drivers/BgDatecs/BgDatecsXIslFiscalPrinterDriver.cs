@@ -56,7 +56,8 @@ namespace ErpNet.FP.Core.Drivers.BgDatecs
         protected DeviceInfo ParseDeviceInfo(string rawDeviceInfo, bool autoDetect)
         {
             var commaFields = rawDeviceInfo.Split(',');
-            if (commaFields.Length != 6)
+            //if (commaFields.Length != 6)
+            if (commaFields.Length != 5)
             {
                 throw new InvalidDeviceInfoException($"rawDeviceInfo must contain 6 comma-separated items for '{DriverName}'");
             }
@@ -64,14 +65,21 @@ namespace ErpNet.FP.Core.Drivers.BgDatecs
             var modelName = commaFields[0];
             if (autoDetect)
             {
-                if (serialNumber.Length != 8 || !serialNumber.StartsWith(SerialNumberPrefix, System.StringComparison.Ordinal))
+                if (serialNumber.Length != 12 || !serialNumber.StartsWith(SerialNumberPrefix, System.StringComparison.Ordinal))
                 {
-                    throw new InvalidDeviceInfoException($"serial number must begin with {SerialNumberPrefix} and be with length 8 characters for '{DriverName}'");
+                    //throw new InvalidDeviceInfoException($"serial number must begin with {SerialNumberPrefix} and be with length 8 characters for '{DriverName}'");
                 }
 
-                if (!modelName.EndsWith("X", System.StringComparison.Ordinal) &&
-                    !modelName.EndsWith("XR", System.StringComparison.Ordinal) &&
-                    !modelName.EndsWith("XE", System.StringComparison.Ordinal))
+                if (modelName.EndsWith("X", System.StringComparison.Ordinal) ||
+                    modelName.EndsWith("XR", System.StringComparison.Ordinal) ||
+                    modelName.EndsWith("XE", System.StringComparison.Ordinal))
+                {
+                    throw new InvalidDeviceInfoException($"incompatible with '{DriverName}'");
+                }
+
+                if (
+                    !modelName.StartsWith("DP", System.StringComparison.Ordinal) &&
+                    !modelName.StartsWith("WP", System.StringComparison.Ordinal))
                 {
                     throw new InvalidDeviceInfoException($"incompatible with '{DriverName}'");
                 }
@@ -80,7 +88,7 @@ namespace ErpNet.FP.Core.Drivers.BgDatecs
             var info = new DeviceInfo
             {
                 SerialNumber = serialNumber,
-                FiscalMemorySerialNumber = commaFields[5],
+                //FiscalMemorySerialNumber = commaFields[5],
                 Model = modelName,
                 FirmwareVersion = commaFields[1],
                 Manufacturer = "Datecs",
