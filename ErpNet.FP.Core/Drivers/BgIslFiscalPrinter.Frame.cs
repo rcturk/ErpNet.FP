@@ -110,7 +110,7 @@
 
                     // Parse frames
                     var readFrames = new List<List<byte>>();
-                    foreach (var b in buffer)
+                    foreach (  var b in buffer)
                     {
                         currentFrame.Add(b);
                         // Split buffer by following separators

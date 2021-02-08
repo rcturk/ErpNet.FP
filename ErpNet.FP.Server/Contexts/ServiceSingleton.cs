@@ -40,40 +40,40 @@
 
             // Drivers
             var datecsXIsl = new BgDatecsXIslFiscalPrinterDriver();
-            var datecsPIsl = new BgDatecsPIslFiscalPrinterDriver();
-            var datecsCIsl = new BgDatecsCIslFiscalPrinterDriver();
-            var eltradeIsl = new BgEltradeIslFiscalPrinterDriver();
-            var daisyIsl = new BgDaisyIslFiscalPrinterDriver();
-            var incotexIsl = new BgIncotexIslFiscalPrinterDriver();
-            var islIcp = new BgIslIcpFiscalPrinterDriver();
-            var tremolZfp = new BgTremolZfpFiscalPrinterDriver();
-            var tremolV2Zfp = new BgTremolZfpV2FiscalPrinterDriver();
+            //var datecsPIsl = new BgDatecsPIslFiscalPrinterDriver();
+            //var datecsCIsl = new BgDatecsCIslFiscalPrinterDriver();
+            //var eltradeIsl = new BgEltradeIslFiscalPrinterDriver();
+            //var daisyIsl = new BgDaisyIslFiscalPrinterDriver();
+            //var incotexIsl = new BgIncotexIslFiscalPrinterDriver();
+            //var islIcp = new BgIslIcpFiscalPrinterDriver();
+            //var tremolZfp = new BgTremolZfpFiscalPrinterDriver();
+            //var tremolV2Zfp = new BgTremolZfpV2FiscalPrinterDriver();
 
             // Add drivers and their compatible transports to the provider.
             Provider = new Provider(configOptions)
                 // Isl X Frame
                 .Register(datecsXIsl, comTransport)
-                .Register(datecsXIsl, tcpTransport)
+                .Register(datecsXIsl, tcpTransport);
                 // Isl Frame
-                .Register(datecsCIsl, comTransport)
-                .Register(datecsCIsl, tcpTransport)
-                .Register(datecsPIsl, comTransport)
-                .Register(datecsPIsl, tcpTransport)
-                .Register(eltradeIsl, comTransport)
-                .Register(eltradeIsl, tcpTransport)
+                //.Register(datecsCIsl, comTransport)
+                //.Register(datecsCIsl, tcpTransport)
+                //.Register(datecsPIsl, comTransport)
+                //.Register(datecsPIsl, tcpTransport)
+                //.Register(eltradeIsl, comTransport)
+                //.Register(eltradeIsl, tcpTransport)
                 // Isl Frame + constants
-                .Register(daisyIsl, comTransport)
-                .Register(daisyIsl, tcpTransport)
-                .Register(incotexIsl, comTransport)
-                .Register(incotexIsl, tcpTransport)
+                //.Register(daisyIsl, comTransport)
+                //.Register(daisyIsl, tcpTransport)
+                //.Register(incotexIsl, comTransport)
+                //.Register(incotexIsl, tcpTransport)
                 // Icp Frame
-                .Register(islIcp, comTransport)
-                .Register(islIcp, tcpTransport)
+                //.Register(islIcp, comTransport)
+                //.Register(islIcp, tcpTransport)
                 // Zfp Frame
-                .Register(tremolZfp, comTransport)
-                .Register(tremolZfp, tcpTransport)
-                .Register(tremolV2Zfp, comTransport)
-                .Register(tremolV2Zfp, tcpTransport);
+                //.Register(tremolZfp, comTransport)
+                //.Register(tremolZfp, tcpTransport)
+                //.Register(tremolV2Zfp, comTransport)
+                //.Register(tremolV2Zfp, tcpTransport);
         }
 
         protected override void WriteOptions()

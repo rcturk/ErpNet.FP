@@ -106,7 +106,7 @@
             }
 
             var fields = receiptStatusResponse.Split('\t');
-            if (fields.Length < 5)
+            if (fields.Length < 8)
             {
                 deviceStatus.AddInfo($"Error occured while parsing last receipt status");
                 deviceStatus.AddError("E409", "Wrong format of receipt status");
@@ -115,7 +115,7 @@
 
             try
             {
-                var amountString = fields[4];
+                var amountString = fields[7];
                 if (amountString.Length > 0)
                 {
                     receiptAmount = (amountString[0]) switch
@@ -125,7 +125,6 @@
                         _ => decimal.Parse(amountString, System.Globalization.CultureInfo.InvariantCulture),
                     };
                 }
-
             }
             catch (Exception e)
             {
@@ -225,7 +224,8 @@
                 PriceModifierTypeToProtocolValue(),
                 priceModifierValue.ToString("F2", CultureInfo.InvariantCulture),
                 department.ToString(),
-                "");
+                "buc.", "");
+
             return Request(CommandFiscalReceiptSale, itemData);
         }
 
@@ -239,7 +239,7 @@
 
         public override (string, DeviceStatus) FullPayment()
         {
-            return Request(CommandFiscalReceiptTotal, "\t\t\t");
+            return Request(CommandFiscalReceiptTotal, "0\t\t");
         }
 
         public override (string, DeviceStatus) AddPayment(decimal amount, PaymentType paymentType)
@@ -271,43 +271,23 @@
             string operatorPassword)
         {
             string header;
-            if (string.IsNullOrEmpty(uniqueSaleNumber))
-            {
-                header = string.Join("\t",
+
+            header = string.Join("\t",
                 new string[] {
                     String.IsNullOrEmpty(operatorId) ?
                         Options.ValueOrDefault("Operator.ID", "1")
                         :
                         operatorId,
                     String.IsNullOrEmpty(operatorId) ?
-                        Options.ValueOrDefault("Operator.Password", "0000").WithMaxLength(Info.OperatorPasswordMaxLength)
+                        Options.ValueOrDefault("Operator.Password", "0001").WithMaxLength(Info.OperatorPasswordMaxLength)
                         :
                         operatorPassword,
                     "1",
                     "",
-                    ""
-                });
-
-            }
-            else
-            {
-                header = string.Join("\t",
-                new string[] {
-                    String.IsNullOrEmpty(operatorId) ?
-                        Options.ValueOrDefault("Operator.ID", "1")
-                        :
-                        operatorId,
-                    String.IsNullOrEmpty(operatorId) ?
-                        Options.ValueOrDefault("Operator.Password", "0000").WithMaxLength(Info.OperatorPasswordMaxLength)
-                        :
-                        operatorPassword,
-                    uniqueSaleNumber,
-                    "1",
                     "",
                     ""
                 });
 
-            }
             return Request(CommandOpenFiscalReceipt, header);
         }
 
@@ -464,5 +444,5 @@
 
     }
 
-    
+
 }

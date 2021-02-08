@@ -100,24 +100,14 @@
         {
             var receiptInfo = new ReceiptInfo();
 
-            var (fiscalMemorySerialNumber, deviceStatus) = GetFiscalMemorySerialNumber();
-            if (!deviceStatus.Ok)
-            {
-                return (receiptInfo, deviceStatus);
-            }
-
-            receiptInfo.FiscalMemorySerialNumber = fiscalMemorySerialNumber;
-
+            var deviceStatus = new DeviceStatus();
+            
             uint itemNumber = 0;
             // Receipt items
             if (receipt.Items != null) foreach (var item in receipt.Items)
                 {
                     itemNumber++;
-                    if (item.Type == ItemType.Comment)
-                    {
-                        (_, deviceStatus) = AddComment(item.Text);
-                    }
-                    else if (item.Type == ItemType.Sale)
+                    if (item.Type == ItemType.Sale)
                     {
                         try
                         {
@@ -137,14 +127,6 @@
                             break;
                         }
                     }
-                    else if (item.Type == ItemType.SurchargeAmount)
-                    {
-                        (_, deviceStatus) = SubtotalChangeAmount(item.Amount);
-                    }
-                    else if (item.Type == ItemType.DiscountAmount)
-                    {                        
-                        (_, deviceStatus) = SubtotalChangeAmount(-item.Amount);
-                    }
                     if (!deviceStatus.Ok)
                     {
                         deviceStatus.AddInfo($"Error occurred in Item {itemNumber}");
@@ -162,75 +144,6 @@
                     return (receiptInfo, deviceStatus);
                 }
             }
-            else
-            {
-                uint paymentNumber = 0;
-                foreach (var payment in receipt.Payments)
-                {
-                    paymentNumber++;
-
-                    if (payment.PaymentType == PaymentType.Change)
-                    {
-                        // PaymentType.Change is abstract payment, 
-                        // used only for computing the total sum of the payments.
-                        // So we will skip it.
-                        continue;
-                    }
-
-                    try
-                    {
-                        (_, deviceStatus) = AddPayment(payment.Amount, payment.PaymentType);
-                    }
-                    catch (StandardizedStatusMessageException e)
-                    {
-                        deviceStatus = new DeviceStatus();
-                        deviceStatus.AddError(e.Code, e.Message);
-                    }
-
-                    if (!deviceStatus.Ok)
-                    {
-                        deviceStatus.AddInfo($"Error occurred in Payment {paymentNumber}");
-                        return (receiptInfo, deviceStatus);
-                    }
-                }
-            }
-
-            itemNumber = 0;
-            if (receipt.Items != null) foreach (var item in receipt.Items)
-                {
-                    itemNumber++;
-                    if (item.Type == ItemType.FooterComment)
-                    {
-                        (_, deviceStatus) = AddComment(item.Text);
-                        if (!deviceStatus.Ok)
-                        {
-                            deviceStatus.AddInfo($"Error occurred in Item {itemNumber}");
-                            return (receiptInfo, deviceStatus);
-                        }
-                    }
-                }
-
-            // Get the receipt date and time (current fiscal device date and time)
-            DateTime? dateTime;
-            (dateTime, deviceStatus) = GetDateTime();
-            if (!dateTime.HasValue || !deviceStatus.Ok)
-            {
-                AbortReceipt();
-                return (receiptInfo, deviceStatus);
-            }
-            receiptInfo.ReceiptDateTime = dateTime.Value;
-
-            // Get receipt amount
-            decimal? receiptAmount;
-            (receiptAmount, deviceStatus) = GetReceiptAmount();
-            if (!receiptAmount.HasValue || !deviceStatus.Ok)
-            {
-                AbortReceipt();
-                return (receiptInfo, deviceStatus);
-            }
-            receiptInfo.ReceiptAmount = receiptAmount.Value;
-
-            // Closing receipt
             string closeReceiptResponse;
             (closeReceiptResponse, deviceStatus) = CloseReceipt();
             if (!deviceStatus.Ok)
@@ -240,17 +153,36 @@
                 return (receiptInfo, deviceStatus);
             }
 
+            var fiscalMemorySerialNumber = string.Empty;
+            (fiscalMemorySerialNumber, deviceStatus) = GetFiscalMemorySerialNumber();
+            if (deviceStatus.Ok && !string.IsNullOrEmpty(fiscalMemorySerialNumber))
+            {
+                receiptInfo.FiscalMemorySerialNumber = fiscalMemorySerialNumber;
+            }
+
+            // Get the receipt date and time (current fiscal device date and time)
+            DateTime? dateTime;
+            (dateTime, deviceStatus) = GetDateTime();
+            if (dateTime.HasValue && deviceStatus.Ok)
+            {
+                receiptInfo.ReceiptDateTime = dateTime.Value;
+            }
+
+            // Get receipt amount
+            decimal? receiptAmount;
+            (receiptAmount, deviceStatus) = GetReceiptAmount();
+            if (receiptAmount.HasValue && deviceStatus.Ok)
+            {
+                receiptInfo.ReceiptAmount = receiptAmount.Value;
+            }
+
             // Get receipt number
             string lastDocumentNumberResponse;
             (lastDocumentNumberResponse, deviceStatus) = GetLastDocumentNumber(closeReceiptResponse);
-            if (!deviceStatus.Ok || String.IsNullOrWhiteSpace(lastDocumentNumberResponse))
+            if (deviceStatus.Ok && !string.IsNullOrWhiteSpace(lastDocumentNumberResponse))
             {
-                AbortReceipt();
-                deviceStatus.AddInfo($"Error occurred while reading last receipt number");
-                deviceStatus.AddError("E409", $"Last receipt number is empty");
-                return (receiptInfo, deviceStatus);
+                receiptInfo.ReceiptNumber = lastDocumentNumberResponse;
             }
-            receiptInfo.ReceiptNumber = lastDocumentNumberResponse;
 
             return (receiptInfo, deviceStatus);
         }
@@ -293,7 +225,7 @@
             var receiptInfo = new ReceiptInfo();
 
             // Abort all unfinished or erroneus receipts
-            AbortReceipt();
+            //AbortReceipt();
 
             // Opening receipt
             var (_, deviceStatus) = OpenReceipt(
